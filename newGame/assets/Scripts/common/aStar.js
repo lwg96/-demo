@@ -1,6 +1,3 @@
-
-
-
 function RoadNode(startPos, endPos, parent) {
     this.startPos = startPos;
     this.endPos = endPos;
@@ -44,6 +41,11 @@ RoadNode.prototype.getG = function () {
     return g;
 };
 
+/**
+ * 曼哈顿 x-x0 + y-y0
+ * 欧几里 Math.sqrt(Math.pow((x-x0),2) + Math.pow((y-y0),2)) 
+ */
+
 RoadNode.prototype.getH = function () {
     let h = -1;
     if (this.endPos) {
@@ -54,6 +56,7 @@ RoadNode.prototype.getH = function () {
 };
 
 RoadNode.prototype.checkLinkNode = function (closeList, mapArr) {
+    console.log("checkLinkNode.index: ", this.xIndex, this.yIndex);
     if (this.xIndex - 1 >= 0) {
         this._addLink(this.xIndex - 1, this.yIndex, closeList, mapArr)
     }
@@ -64,16 +67,29 @@ RoadNode.prototype.checkLinkNode = function (closeList, mapArr) {
         this._addLink(this.xIndex, this.yIndex - 1, closeList, mapArr)
     }
 
-
-    console.log("xindex: ", this.xIndex);
-    if (mapArr[this.xIndex]){
-        if (this.yIndex + 1 < mapArr[this.xIndex].length) {
-            this._addLink(this.xIndex, this.yIndex + 1, closeList, mapArr)
-        }
+    if (this.yIndex + 1 < mapArr[this.xIndex].length) {
+        this._addLink(this.xIndex, this.yIndex + 1, closeList, mapArr)
     }
-    
+
+    if (ASTART.BevelSwitch) {
+        if (this.xIndex - 1 >= 0 && this.yIndex - 1 >= 0) {//左下
+            this._addLink(this.xIndex - 1, this.yIndex - 1, closeList, mapArr)
+        }
+
+        if (this.xIndex - 1 >= 0 && this.yIndex + 1 < mapArr[this.xIndex - 1].length) {//左上
+            this._addLink(this.xIndex - 1, this.yIndex + 1, closeList, mapArr)
+        }
+
+        if (this.xIndex + 1 < mapArr.length && this.yIndex - 1 >= 0) {//右下
+            this._addLink(this.xIndex + 1, this.yIndex - 1, closeList, mapArr)
+        }
+
+        if (this.xIndex + 1 < mapArr.length && this.yIndex + 1 < mapArr[this.xIndex + 1].length) {//右上
+            this._addLink(this.xIndex + 1, this.yIndex + 1, closeList, mapArr)
+        }
 
 
+    }
 };
 
 RoadNode.prototype.getxIndex = function () {
@@ -94,9 +110,8 @@ RoadNode.prototype._addLink = function (x, y, closeList, mapArr) {
     }
 };
 
-
 let PathManager = {
-
+    BevelSwitch: false,
     findPath(startPos, endPos, mapArr) {
 
         let startNode = new RoadNode(startPos, endPos, null);
@@ -157,7 +172,7 @@ let PathManager = {
             tempNode = tempNode.getParent();
         }
         return path;
-    }
+    },
 }
 
 window.ASTART = PathManager;

@@ -17,7 +17,7 @@ cc.Class({
     },
 
     onLoad() {
-        this.gameMapCtrl.init();
+        this.gameMapCtrl.init(true);
         this.gameMapCtrl.node.on(cc.Node.EventType.TOUCH_END, this.touchEnd, this)
         this.newPlayer();
 
@@ -30,51 +30,46 @@ cc.Class({
         item.setPosition(pos);
         this.player = item;
 
-
-        this.playerPositionChange();
-
-        // this.player.on(cc.Node.EventType.POSITION_CHANGED, this.playerPositionChange, this)
+        this.initCameraPos();
     },
 
-    playerPositionChange() {
-        let worldPos = this.player.convertToWorldSpaceAR(cc.v2(0, 0));
+    initCameraPos() {
+        let worldPos = this.player.convertToWorldSpaceAR(cc.v2(0, 0));//拿到player的世界坐标
 
-        let cameraPos = this.camera.node.convertToNodeSpaceAR(worldPos);
+        let cameraPos = this.camera.node.convertToNodeSpaceAR(worldPos);//将player的世界坐标转换为摄像机节点下的坐标
 
-        let zoomRatio = this.camera.zoomRatio;
-        let w = cc.winSize.width / zoomRatio;
-        let h = cc.winSize.height / zoomRatio;
+        let zoomRatio = this.camera.zoomRatio;//摄像机的缩放比例
+        let w = cc.winSize.width / zoomRatio;//摄像机实际的宽
+        let h = cc.winSize.height / zoomRatio;//摄像机实际的高
 
-        if (cameraPos.x - w / 2 < -320) {
-            cameraPos.x = -320 + w / 2;
+        let mapSzie = this.gameMapCtrl.getMapRealSize();
+
+        let mapLeftBorder = -mapSzie.width / 2;
+        let mapRightBorder = mapSzie.width / 2;
+
+        let mapBottomBorder = -mapSzie.height / 2;
+        let mapTopBorder = mapSzie.height / 2;
+        //摄像机原点 - 实际宽高 = 边界位置坐标
+        if (cameraPos.x - w / 2 < mapLeftBorder) {//左边边界
+            cameraPos.x = mapLeftBorder + w / 2;
         }
 
-        if (cameraPos.x + w / 2 > 320) {
+        if (cameraPos.x + w / 2 > mapRightBorder) {//右边边界
             cameraPos.x = 320 - w / 2
         }
-        if (cameraPos.y - h / 2 < -320) {
-            cameraPos.y = -320 + h / 2;
+        if (cameraPos.y - h / 2 < mapBottomBorder) {//下边边界
+            cameraPos.y = mapBottomBorder + h / 2;
         }
 
-        if (cameraPos.y + h / 2 > 320) {
-            cameraPos.y = 320 - h / 2
+        if (cameraPos.y + h / 2 > mapTopBorder) {//上边边界
+            cameraPos.y = mapTopBorder - h / 2
         }
-
 
         this.camera.node.setPosition(cameraPos);
-
-
     },
 
     touchEnd(event) {
 
-        // let tempPos = cc.find("Canvas").width;
-        // let apos = this.camera.node.width;
-
-        // return;
-
-        let d = this.gameMapCtrl.getMapOrientation();
-        console.log("222");
         let touch = event.touch;
         let pos = touch.getLocation();
 
@@ -83,21 +78,19 @@ cc.Class({
         let realPos = this.playerParent.convertToNodeSpaceAR(pos);
 
         let mapSize = this.gameMapCtrl.getMapRealSize();
-        let halfW = mapSize.x / 2;
-        let halfH = mapSize.y / 2;
+        let halfW = mapSize.width / 2;
+        let halfH = mapSize.height / 2;
 
-        let mapArr = this.gameMapCtrl._getMapData();
+        let mapArr = this.gameMapCtrl.getMapData();
 
-        let startPos = this.gameMapCtrl.changPos(this.player.x + halfW, this.player.y + halfH);
-        let endPos = this.gameMapCtrl.changPos(realPos.x + halfW, realPos.y + halfH);
+        let startPos = this.gameMapCtrl.getTiledPos(this.player.x + halfW, this.player.y + halfH);
+        let endPos = this.gameMapCtrl.getTiledPos(realPos.x + halfW, realPos.y + halfH);
 
-        if (!mapArr[endPos.xIndex][endPos.yIndex]) {
-            return;
-        }
+        endPos = this.gameMapCtrl.getMaxClosePos(endPos, mapArr);
 
         let path = ASTART.findPath(startPos, endPos, mapArr);
 
-        this.player.getComponent("playerCtrl").runByPath(path, this.camera.node);
+        this.player.getComponent("playerCtrl").runByPath(path, this.camera.node, this.gameMapCtrl);
 
     },
 });

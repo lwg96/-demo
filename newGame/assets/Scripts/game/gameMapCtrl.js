@@ -3,37 +3,34 @@ cc.Class({
 
     properties: {
         _map: undefined,
-        _mapData: undefined,
+        // _mapData: undefined,
         _playerPos: undefined,
 
     },
 
-    init() {
+    /**
+     * bevelSwitch 斜对角开关
+     **/
+    init(bevelSwitch) {
+        this.bevelSwitch = bevelSwitch;
+        ASTART.BevelSwitch = bevelSwitch;
         let map = this.node.getComponent(cc.TiledMap);
         this._map = map;
-        this._mapData = this._getMapData();
-
-        this._playerPos = this._getPlayerPos();
+        // this._mapData = this.getMapData(); 这个时候获取没啥用
+        this._playerPos = this.getPlayerPos();
     },
 
     getMapRealSize() {
-        return cc.v2(this._map.getMapSize().width * this._map.getTileSize().width, this._map.getMapSize().height * this._map.getTileSize().height)
+        let w = this._map.getMapSize().width * this._map.getTileSize().width;
+        let h = this._map.getMapSize().height * this._map.getTileSize().height;
+        return { width: w, height: h };
     },
 
     getMap() {
         return this._map;
     },
 
-    getMapData() {
-        return this._mapData;
-    },
-
     getPlayerPos() {
-        return this._playerPos;
-    },
-
-
-    _getPlayerPos() {
         let objGround = this._map.getObjectGroup("playerGround");
         let player = objGround.getObject("player");
 
@@ -44,7 +41,7 @@ cc.Class({
 
     },
 
-    _getMapData() {
+    getMapData() {
         let roadLayer = this._map.getLayer("road");
 
         let width = roadLayer.getLayerSize().width;
@@ -54,7 +51,7 @@ cc.Class({
         for (let i = 0; i < width; i++) {
             mapData[i] = [];
             for (let j = 0; j < height; j++) {
-                let gid = roadLayer.getTileGIDAt( i, height - 1 - j);
+                let gid = roadLayer.getTileGIDAt(i, height - 1 - j);
                 if (gid != 0) {
                     mapData[i][j] = true;
                 } else {
@@ -68,19 +65,100 @@ cc.Class({
     },
 
 
-    changPos(sx, sy) {
+    getTiledPos(sx, sy) {
         let w = this._map.getTileSize().width;
         let h = this._map.getTileSize().height;
-        let x = Math.abs(Math.floor(sx / w)) ;
+        let x = Math.abs(Math.floor(sx / w));
         let y = Math.abs(Math.floor(sy / h));
         return { xIndex: x, yIndex: y };
     },
 
-    getMapOrientation(){
-        let d = this._map.getMapOrientation();
-        let roadLayer = this._map.getLayer("road");
-        let l = roadLayer.getLayerOrientation();
+    posDealWith(endPos, mapArr) {
+        if (!mapArr[endPos.xIndex][endPos.yIndex]) {
+            return this.getMaxClosePos(endPos, mapArr);
+        } else {
+            return endPos;
+        }
+    },
 
-        console.log("aaa");
+    getMaxClosePos(endPos, mapArr) {
+        let x = endPos.xIndex;
+        let y = endPos.yIndex;
+        let posArr = [];
+        for (let i = x - 1; i >= 0; i--) {//左边
+            posArr.push({ xIndex: i, yIndex: y });
+            break;
+        }
+        for (let i = x + 1; i < mapArr.length; i++) {//右边
+            posArr.push({ xIndex: i, yIndex: y });
+            break;
+        }
+        for (let i = y - 1; i >= 0; i--) {//下边
+            posArr.push({ xIndex: x, yIndex: i });
+            break;
+        }
+
+        for (let i = y + 1; i < mapArr[x].length; i++) {//上边
+            posArr.push({ xIndex: x, yIndex: i });
+            break;
+        }
+
+        if (this.bevelSwitch) {
+            let bool = false;
+            for (let i = x - 1; i >= 0; i--) {//左下
+                for (let j = y - 1; j >= 0; j--) {
+                    posArr.push({ xIndex: i, yIndex: j });
+                    bool = true
+                    break;
+                }
+                if (bool) {
+                    break;
+                }
+            }
+            bool = false;
+            for (let i = x - 1; i >= 0; i--) {//左上
+                for (let j = y + 1; j < mapArr[i].length; j++) {
+                    posArr.push({ xIndex: i, yIndex: j });
+                    bool = true
+                    break;
+                }
+                if (bool) {
+                    break;
+                }
+            }
+            bool = false;
+            for (let i = x + 1; i < mapArr.length; i++) {//右下
+                for (let j = y - 1; j >= 0; j--) {
+                    posArr.push({ xIndex: i, yIndex: j });
+                    bool = true
+                    break;
+                }
+                if (bool) {
+                    break;
+                }
+            }
+
+            bool = false;
+            for (let i = x + 1; i < mapArr.length; i++) {//右上
+                for (let j = y + 1; j < mapArr[i].length; j++) {
+                    posArr.push({ xIndex: i, yIndex: j });
+                    bool = true
+                    break;
+                }
+                if (bool) {
+                    break;
+                }
+            }
+        }
+
+        if(posArr.length > 0){
+            posArr.sort(function(a,b){
+                (a.xIndex - endPos.xIndex) + (a.yIndex - endPos.yIndex)  - ((b.xIndex - endPos.xIndex) + (b.yIndex - endPos.yIndex))
+            })
+
+            return posArr[0];
+        }else{
+            return endPos;
+        }
     }
 });
