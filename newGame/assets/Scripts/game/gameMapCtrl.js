@@ -86,30 +86,41 @@ cc.Class({
         let y = endPos.yIndex;
         let posArr = [];
         for (let i = x - 1; i >= 0; i--) {//左边
-            posArr.push({ xIndex: i, yIndex: y });
-            break;
+            if (mapArr[i][y]) {
+                posArr.push({ xIndex: i, yIndex: y });
+                break;
+            }
         }
         for (let i = x + 1; i < mapArr.length; i++) {//右边
-            posArr.push({ xIndex: i, yIndex: y });
-            break;
+            if (mapArr[i][y]) {
+                posArr.push({ xIndex: i, yIndex: y });
+                break;
+            }
         }
         for (let i = y - 1; i >= 0; i--) {//下边
-            posArr.push({ xIndex: x, yIndex: i });
-            break;
+            if (mapArr[x][i]) {
+                posArr.push({ xIndex: x, yIndex: i });
+                break;
+            }
         }
 
         for (let i = y + 1; i < mapArr[x].length; i++) {//上边
-            posArr.push({ xIndex: x, yIndex: i });
-            break;
+            if (mapArr[x][i]) {
+                posArr.push({ xIndex: x, yIndex: i });
+                break;
+            }
         }
 
-        if (this.bevelSwitch) {
+        if (ASTART.BevelSwitch) {
             let bool = false;
             for (let i = x - 1; i >= 0; i--) {//左下
                 for (let j = y - 1; j >= 0; j--) {
-                    posArr.push({ xIndex: i, yIndex: j });
-                    bool = true
-                    break;
+                    if (mapArr[i][j]) {
+                        posArr.push({ xIndex: i, yIndex: j });
+                        bool = true
+                        break;
+                    }
+
                 }
                 if (bool) {
                     break;
@@ -118,9 +129,11 @@ cc.Class({
             bool = false;
             for (let i = x - 1; i >= 0; i--) {//左上
                 for (let j = y + 1; j < mapArr[i].length; j++) {
-                    posArr.push({ xIndex: i, yIndex: j });
-                    bool = true
-                    break;
+                    if (mapArr[i][j]) {
+                        posArr.push({ xIndex: i, yIndex: j });
+                        bool = true
+                        break;
+                    }
                 }
                 if (bool) {
                     break;
@@ -129,9 +142,11 @@ cc.Class({
             bool = false;
             for (let i = x + 1; i < mapArr.length; i++) {//右下
                 for (let j = y - 1; j >= 0; j--) {
-                    posArr.push({ xIndex: i, yIndex: j });
-                    bool = true
-                    break;
+                    if (mapArr[i][j]) {
+                        posArr.push({ xIndex: i, yIndex: j });
+                        bool = true
+                        break;
+                    }
                 }
                 if (bool) {
                     break;
@@ -141,9 +156,11 @@ cc.Class({
             bool = false;
             for (let i = x + 1; i < mapArr.length; i++) {//右上
                 for (let j = y + 1; j < mapArr[i].length; j++) {
-                    posArr.push({ xIndex: i, yIndex: j });
-                    bool = true
-                    break;
+                    if (mapArr[i][j]) {
+                        posArr.push({ xIndex: i, yIndex: j });
+                        bool = true
+                        break;
+                    }
                 }
                 if (bool) {
                     break;
@@ -151,13 +168,13 @@ cc.Class({
             }
         }
 
-        if(posArr.length > 0){
-            posArr.sort(function(a,b){
-                (a.xIndex - endPos.xIndex) + (a.yIndex - endPos.yIndex)  - ((b.xIndex - endPos.xIndex) + (b.yIndex - endPos.yIndex))
+        if (posArr.length > 0) {
+            posArr.sort(function (a, b) {
+               return Math.abs(a.xIndex - endPos.xIndex) + Math.abs(a.yIndex - endPos.yIndex) - (Math.abs(b.xIndex - endPos.xIndex) + Math.abs(b.yIndex - endPos.yIndex))
             })
 
             return posArr[0];
-        }else{
+        } else {
             return endPos;
         }
     }
